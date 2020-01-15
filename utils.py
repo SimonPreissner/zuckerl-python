@@ -14,8 +14,9 @@ import time
 def loop_input(rtype=str, default=None, msg=""):
     """
     Wrapper function for command-line input that specifies an input type
-    and a default value. Input types can be string, int, float, or bool.
-    :param rtype: type of the input. one of str, int, float, bool
+    and a default value. Input types can be string, int, float, or bool, 
+    or "file", so that only existing files will pass the input.
+    :param rtype: type of the input. one of str, int, float, bool, "file"
     :type rtype: type
     :param default: value to be returned if the input is empty
     :param msg: message that is printed as prompt
@@ -32,6 +33,13 @@ def loop_input(rtype=str, default=None, msg=""):
                     return False
                 else:
                     print("Input needs to be convertable to",rtype,"-- try again.")
+                    continue
+            if rtype == "file" and len(s)>0:
+                try:
+                    with open(s, "r"):
+                        pass
+                except FileNotFoundError as e:
+                    print("File",s,"not found -- try again.")
                     continue
             else:
                 return rtype(s) if len(s) > 0 else default
@@ -211,11 +219,11 @@ class ConfigReader():
 
 
 class Timer():
-	#TODO change data structure to contain the type of time-taking; e.g., (t1, t0, lap)
-	#TODO change data structure to containe fragmented timing (multiple intervals)
-	#TODO provide better documentation and usage instructions
-	#TODO implement go_on()
-	#TODO change total() to perform simple cumulative counting (no END_TIME)
+    #TODO change data structure to contain the type of time-taking; e.g., (t1, t0, lap)
+    #TODO change data structure to containe fragmented timing (multiple intervals)
+    #TODO provide better documentation and usage instructions
+    #TODO implement go_on()
+    #TODO change total() to perform simple cumulative counting (no END_TIME)
     def __init__(self):
         self.START_TIME = time.time() 
         self.END_TIME = 0
@@ -246,7 +254,7 @@ class Timer():
         return t1
 
     def go_on(self, label=None):
-    	""" 
+        """ 
         
         """
         t1 = time.time()
