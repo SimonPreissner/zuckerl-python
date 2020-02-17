@@ -136,6 +136,7 @@ class ConfigReader():
                     """ parse the single value """
                     paramvalue = self.numberparse(words[0]) # 'words' is still a list
                     paramvalue = self.boolparse(paramvalue)
+                    paramvalue = self.noneparse(paramvalue)
 
             cfg[paramname] = paramvalue # adds the parameter to the config
 
@@ -203,6 +204,13 @@ class ConfigReader():
             return bool(string)
         else:
             return string
+
+    @staticmethod
+    def noneparse(string):
+    	if string == "None" or string == "NONE":
+    		return None
+    	else: 
+    		return string
 
     def get_config(self):
         """
