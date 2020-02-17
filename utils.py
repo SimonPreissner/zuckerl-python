@@ -79,6 +79,21 @@ class ConfigReader():
         """
         return "\n".join([str(k)+"\t"+str(v) for k,v in self.params.items()])
 
+    def __call__(self, *paramnames):
+    """
+    Returns a single value or a list of values corresponding to the
+    provided parameter name(s). Returns the whole config in form of a
+    dictionary if no parameter names are specified.
+    """
+    if not paramnames: # return the whole config
+        return self.params
+    else: # return specified values
+        values = [self.params[name] for name in paramnames]
+        if len(values) == 1:
+            return values[0]
+        else:
+            return values
+
     def read_config(self):
         """
         Reads the ConfigReader's assigned file (attribute: 'filename') and parses
