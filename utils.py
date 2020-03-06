@@ -14,7 +14,7 @@ import time
 def loop_input(rtype=str, default=None, msg=""):
     """
     Wrapper function for command-line input that specifies an input type
-    and a default value. Input types can be string, int, float, or bool, 
+    and a default value. Input types can be string, int, float, or bool,
     or "file", so that only existing files will pass the input.
     :param rtype: type of the input. one of str, int, float, bool, "file"
     :type rtype: type
@@ -34,10 +34,12 @@ def loop_input(rtype=str, default=None, msg=""):
                 else:
                     print("Input needs to be convertable to",rtype,"-- try again.")
                     continue
-            if rtype == "file" and len(s)>0:
+            if rtype == "filepath":
+                s = default if len(s) == 0 else s
                 try:
-                    with open(s, "r"):
-                        pass
+                    f = open(s, "r")
+                    f.close()
+                    return s
                 except FileNotFoundError as e:
                     print("File",s,"not found -- try again.")
                     continue
@@ -46,7 +48,6 @@ def loop_input(rtype=str, default=None, msg=""):
         except ValueError:
             print("Input needs to be convertable to",rtype,"-- try again.")
             continue
-
 
 class ConfigReader():
     """
@@ -242,87 +243,27 @@ class ConfigReader():
 
 
 class Timer():
-    #TODO change data structure to contain the type of time-taking; e.g., (t1, t0, lap)
-    #TODO change data structure to containe fragmented timing (multiple intervals)
-    #TODO provide better documentation and usage instructions
-    #TODO implement go_on()
-    #TODO change total() to perform simple cumulative counting (no END_TIME)
+    # TODO docstring
     def __init__(self):
-        self.START_TIME = time.time() 
-        self.END_TIME = 0
-        self.t0 = 0
-        self.t_lap = 0
-        self.counter = 0
-        self.stopped_times = {}
+        self.T0 = time()
+        self.t0 = time()
+        self.times = {}
+        self.steps = []
+        self.period_name = ""
 
-    def __repr__(self):
-        return "\n".join([str(round(t,6))+"   "+str(i) 
-                          for i,t in self.stopped_times])
+    def __call__(self, periodname):
+        span = time() - self.t0
+        self.t0 = time()
+        self.steps.append(periodname)
+        self.times.update({periodname: span})
+        return span
 
-    def start(self):
-        """ resets t0 (= reference time) to now """
-        self.t0 = time.time()
-        self.t_lap = self.t0
-        return self.t0
+    def __repr__(self, *args):
+        steps = [s for s in args if s in self.steps] if args else self.steps
+        return "\n".join([str(round(self.times[k], 5)) + "   " + k for k in steps])
 
-    def stop(self, label=None):
-        """ 
-        Takes time since t0, without resetting t0. 
-        Use this for cumulative timing. 
-        """
-        t1 = time.time()
-        if not label: label = self.counter
-        self.stopped_times[label] = (t1, self.t0)
-        self.counter += 1
-        return t1
-
-    def go_on(self, label=None):
-        """ 
-        
-        """
-        t1 = time.time()
-        if not label: label = self.counter
-        self.stopped_times[label] = (t1, self.t0)
-        self.counter += 1
-        return t1
-
-    def lap(self, label=None):
-        """ 
-        Takes time and resets t_lap to now. 
-        Use this for subsequent intervals. 
-        """
-        t1 = time.time()
-        if not label: label = self.counter
-        self.stopped_times[label] = (t1, self.t_lap)
-        self.counter += 1
-        self.t_lap = t1
-        return t1
-
-    def total(self, label='total', ret_interval=True):
-        """ 
-        Like stop(), but takes time since initialization. 
-        Use this to take total runtime.
-        """
-        self.END_TIME = time.time()
-        interval = self.END_TIME - self.START_TIME
-        self.stopped_times[label] = (self.END_TIME, self.START_TIME)
-        if ret_interval:
-            return interval
-        else:
-            return self.END_TIME
-
-    def show(self, *labels, precision=4):
-        """ returns particular times, identified by their labels """
-        ret = ""
-        for label in labels:
-            t1, t0 = self.stopped_times[label]
-            ret += (str(round(t1-t0, precision))+" "+str(label)+"\n")
-        return ret.rstrip() # to get rid of the last newline
-
-    def show_all(self, precision=4):
-        """ shows all stored times with associated labels (or cardinal numbers if not specified) """
-        ret = ""
-        for label, (t1, t0) in self.stopped_times.items():
-            ret += (str(round(t1-t0, precision))+" "+str(label)+"\n")
-        return ret.rstrip() # to get rid of the last newline
-
+    def total(self):
+        span = time() - self.T0
+        self.steps.append("total")
+        self.times.update({"total": span})
+        return span
